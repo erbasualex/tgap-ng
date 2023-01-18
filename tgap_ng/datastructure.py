@@ -212,7 +212,7 @@ def angle(orig, dest):
 
 def dist(pa, pb):
     dx = pb[0] - pa[0]
-    dy = pb[1] - pb[1]
+    dy = pb[1] - pa[1]
     return (dx ** 2 + dy ** 2) ** 0.5
 
 
@@ -232,6 +232,16 @@ def eps_for_edge_geometry(g):
                 eps = height
     return eps
 
+def eps_for_edge_geometry_length(g):
+    eps = sys.float_info.max
+    if len(g) > 2:
+        for i in range(0, len(g) - 1):
+            j = i + 1
+            base = dist(g[i], g[j])
+
+            if base < eps:
+                eps = base
+    return eps
 
 def retrieve(DATASET, SRID, unbounded_id):
     pp = PlanarPartition(unbounded_id)
@@ -250,6 +260,7 @@ def retrieve(DATASET, SRID, unbounded_id):
     pp.faces[unbounded_id] = Face(unbounded_id, dataset_envelope, None, set([]), {})
     pp.face_hierarchy[unbounded_id] = None
 
+    #print(f'Alex test: faces: {pp.faces}')
     faces = pp.faces
     face_hierarchy = pp.face_hierarchy
     edge_hierarchy = pp.edge_hierarchy
@@ -276,6 +287,7 @@ def retrieve(DATASET, SRID, unbounded_id):
             face_hierarchy[face_id] = None
 
     print(f"{time.time()-t0:.3f}s face retrieval: {len(faces)} faces")
+    #print(f"Alex Test: {faces[1019]}")
     t0 = time.time()
 
     edges = pp.edges
@@ -343,7 +355,9 @@ def retrieve(DATASET, SRID, unbounded_id):
         ],
         64,
     )
+    #print("TEST TO SEE HOW THE POINTS LOOK LIKE")
     for pt in pts.keys():
+        #print(pt)
         tree.add(pt)
     pp.quadtree = tree
     print(f"{time.time()-t0:.3f}s quadtree construction")
@@ -614,6 +628,7 @@ def dissolve_unwanted_nodes(pp):
         star = node.star
 #    for node_id, star in pp.stars.items():
         if len(star) == 2 and len(set(map(positive_id, star))) == 2:
+            #print(f"Alex Test: node dissolved: {node_id}, {node}")
             pair = tuple(map(positive_id, star))
             dissolve.append((node_id, pair))
 
@@ -811,7 +826,10 @@ def get_geometry_for_wheel(wheel, pp):
             # and add linestring to it
             ln.pop()
             ln.extend(g)
-    return simplegeom.geometry.LinearRing(ln)
+
+    #print("Stop here to debug")
+    retrun_of_simplegeom = simplegeom.geometry.LinearRing(ln)
+    return retrun_of_simplegeom
 
 
 def get_geometry_indexed_for_wheel(wheel, pp):
